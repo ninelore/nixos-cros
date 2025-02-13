@@ -20,7 +20,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in
       {
-        devShell = pkgs.mkShell {
+        devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             nixfmt-rfc-style
           ];
@@ -29,6 +29,22 @@
         packages = import ./pkgs nixpkgs.legacyPackages.${system} // {
           chrultrabook-tools = chrultrabook-tools.packages.${system}.default;
         };
+
+        nixosModules = {
+          default =
+            { ... }:
+            {
+              nixpkgs.overlays = [ self.overlays.default ];
+              imports = [
+                ./modules/default
+              ];
+            };
+          setuidWrappers = import ./modules/setuid { inherit pkgs; };
+        };
+
       }
-    );
+    )
+    // {
+      overlays.default = final: prev: import ./pkgs { pkgs = prev.pkgs; };
+    };
 }
